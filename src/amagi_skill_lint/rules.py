@@ -176,8 +176,8 @@ def lint_file(target: Target, cfg: Config) -> FileResult:
     elif p.yaml_error:
         hint = ""
         if "mapping values are not allowed" in p.yaml_error:
-            hint = ' -- a value contains ": "; wrap the whole value in quotes, e.g. description: "..."'
-        add(Finding("SL002", path, p.yaml_error_line or 1, f"frontmatter is not valid YAML: {p.yaml_error}{hint}"))
+            hint = ' -- a value contains ": ", so wrap the whole value in quotes'
+        add(Finding("SL002", path, p.yaml_error_line or 1, f"invalid YAML: {p.yaml_error}{hint}"))
     elif p.data is not None and not isinstance(p.data, dict):
         add(Finding("SL003", path, p.fm_start + 1, f"frontmatter parsed as {type(p.data).__name__}, expected key: value pairs"))
 
@@ -232,7 +232,7 @@ def _check_fields(r: FileResult, fm: Dict[str, Any], cfg: Config) -> None:
         if not close:
             close = [c for c in known if c.lower().replace("_", "-") == k.lower().replace("_", "-")]
         if close:
-            add(Finding("SL010", path, line_of(k), f"unknown key '{k}' -- did you mean '{close[0]}'? Claude Code ignores it as written"))
+            add(Finding("SL010", path, line_of(k), f"unknown key '{k}' -- did you mean '{close[0]}'? As written it is ignored"))
 
     name = _str(fm.get("name"))
     if not name:
@@ -244,15 +244,15 @@ def _check_fields(r: FileResult, fm: Dict[str, Any], cfg: Config) -> None:
             add(Finding("SL008", path, line_of("name"), f"name {name!r} contains a character Claude Code rejects ({bad.group(0)!r})" if bad else f"name {name!r} has leading/trailing spaces"))
         if is_skill:
             if not PORTABLE_NAME_RE.match(name) or len(name) > 64:
-                why = f"{len(name)} characters (max 64)" if len(name) > 64 else "use only lowercase letters, numbers and single hyphens"
-                add(Finding("SL006", path, line_of("name"), f"name '{name}' is not portable to the Skills API / claude.ai: {why}"))
+                why = f"{len(name)} characters (max 64)" if len(name) > 64 else "lowercase letters, numbers, hyphens only"
+                add(Finding("SL006", path, line_of("name"), f"name '{name}' fails the Skills API / claude.ai rule: {why}"))
             low = name.lower()
             for word in ("anthropic", "claude"):
                 if word in low:
                     add(Finding("SL007", path, line_of("name"), f"name '{name}' contains the reserved word '{word}'; the Skills API rejects it (Claude Code accepts it)"))
             folder = r.path.parent.name
             if folder and folder.lower() != name.lower() and r.path.name.lower() == "skill.md":
-                add(Finding("SL009", path, line_of("name"), f"name '{name}' differs from folder '{folder}'; people will look for one and find the other"))
+                add(Finding("SL009", path, line_of("name"), f"name '{name}' differs from its folder '{folder}'"))
         else:
             if ":" in name:
                 add(Finding("SL008", path, line_of("name"), f"agent name '{name}' contains ':', which Claude Code reserves for plugin-scoped names"))
@@ -283,10 +283,10 @@ def _check_fields(r: FileResult, fm: Dict[str, Any], cfg: Config) -> None:
         if len(trigger) < cfg.min_description:
             add(Finding("SL022", path, dl, f"description is {len(trigger)} characters; say what it does and when to use it (aim for {cfg.min_description}+)"))
         elif r.model_invocable and not TRIGGER_RE.search(trigger):
-            add(Finding("SL023", path, dl, "description has no 'use when ...' style cue; add when Claude should pick it (e.g. 'Use when the user asks to ...')",
+            add(Finding("SL023", path, dl, "no 'use when ...' cue; say when Claude should pick it, e.g. 'Use when the user asks to ...'",
                         WARNING if is_skill else INFO))
         if FIRST_PERSON_RE.search(desc):
-            add(Finding("SL024", path, dl, "description reads as first/second person ('I can...', 'You can...'); write 'Extracts...', 'Use when...'"))
+            add(Finding("SL024", path, dl, "first/second person ('I can...', 'You can...'); write 'Extracts...', 'Use when...'"))
         if is_skill and XML_RE.search(desc):
             add(Finding("SL025", path, dl, f"description contains an XML tag {XML_RE.search(desc).group(0)!r}; the Agent Skills spec forbids them"))
         m = VAGUE_RE.search(desc)
@@ -307,7 +307,7 @@ def _check_values(r: FileResult, fm: Dict[str, Any], line_of) -> None:
     if model is not None:
         ms = str(model).strip()
         if ms not in MODEL_ALIASES and not ms.startswith("claude-"):
-            add(Finding("SL011", path, line_of("model"), f"model '{ms}' is not sonnet, opus, haiku, fable, inherit or a full claude-* model ID"))
+            add(Finding("SL011", path, line_of("model"), f"model '{ms}' is not sonnet, opus, haiku, fable, inherit or a claude-* model ID"))
     effort = fm.get("effort")
     if effort is not None and str(effort) not in EFFORTS:
         add(Finding("SL011", path, line_of("effort"), f"effort '{effort}' should be one of {', '.join(sorted(EFFORTS))}"))

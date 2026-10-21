@@ -31,7 +31,7 @@ def test_yaml_error_points_at_line_with_quote_hint(make_skill):
     f = findings_for(p)
     assert [x.rule for x in f] == ["SL002"]
     assert f[0].line == 3
-    assert "wrap the whole value in quotes" in f[0].message
+    assert "wrap the whole value in quotes" in f[0].message and f[0].message.startswith("invalid YAML")
 
 
 def test_frontmatter_not_mapping(make_skill):

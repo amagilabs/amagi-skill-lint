@@ -261,6 +261,11 @@ def test_inline_disable_comment(make_skill):
     assert rules_for(p) == []
 
 
+def test_disable_comment_shown_in_code_does_not_disable(make_skill):
+    p = make_skill("x", body="Write `<!-- skill-lint-disable SL041 -->` to silence it.\nRun scripts/go.py.\n")
+    assert rules_for(p) == ["SL041"]
+
+
 def test_ignore_and_select(make_skill):
     p = make_skill("Bad_Name", "name: Bad_Name\ndescription: Formats CSV.")
     assert set(rules_for(p)) == {"SL006", "SL022"}

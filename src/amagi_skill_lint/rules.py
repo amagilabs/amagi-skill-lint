@@ -161,7 +161,7 @@ def lint_file(target: Target, cfg: Config) -> FileResult:
         return r
     p = parse(raw)
     r = FileResult(target, p)
-    r.disabled = {c for m in DISABLE_RE.finditer(p.text) for c in re.findall(r"SL\d{3}", m.group(1))}
+    r.disabled = _disabled_rules(p.text)
     add = r.findings.append
     path = target.path
     is_skill = target.kind == "skill"
@@ -197,6 +197,18 @@ def lint_file(target: Target, cfg: Config) -> FileResult:
     _check_refs(r)
     r.findings = [f for f in r.findings if _enabled(f.rule, cfg, r.disabled)]
     return r
+
+
+def _disabled_rules(text: str) -> set:
+    """Rule IDs switched off by a skill-lint-disable comment outside code (so docs can show the syntax)."""
+    kept, in_fence = [], False
+    for line in text.split("\n"):
+        if refmod.FENCE_RE.match(line):
+            in_fence = not in_fence
+            continue
+        if not in_fence:
+            kept.append(re.sub(r"`[^`]*`", "", line))
+    return {c for m in DISABLE_RE.finditer("\n".join(kept)) for c in re.findall(r"SL\d{3}", m.group(1))}
 
 
 def _enabled(rule: str, cfg: Config, disabled: set) -> bool:

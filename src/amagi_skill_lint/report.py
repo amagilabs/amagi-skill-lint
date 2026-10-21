@@ -57,7 +57,8 @@ def render_text(results: Sequence[FileResult], overlaps: Sequence[OverlapResult]
         agents = [r for r in results if r.kind == "agent"]
         parts = [_plural(len(g), label) for label, g in (("skill", skills), ("agent", agents)) if g]
         tok = sum(r.listing_tokens for r in results)
-        out.append(f"Checked {' and '.join(parts)}. Their names + descriptions cost ~{tok:,} tokens in every session.")
+        what = "Its name + description costs" if len(results) == 1 else "Their names + descriptions cost"
+        out.append(f"Checked {' and '.join(parts)}. {what} ~{tok:,} tokens in every session.")
         heavy = sorted((r for r in results if r.body_tokens), key=lambda r: -r.body_tokens)[:3]
         if heavy:
             out.append("Largest bodies: " + ", ".join(f"{r.name or display_path(r.path)} ~{r.body_tokens:,}" for r in heavy) + " tokens.")

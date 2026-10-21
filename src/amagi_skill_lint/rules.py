@@ -361,7 +361,10 @@ def _check_refs(r: FileResult) -> None:
             if not refmod.resolve(base, ref.target).exists():
                 where = " (in a code block)" if ref.in_code else ""
                 add(Finding("SL041", r.path, ref.line, f"'{ref.target}'{where} is not in the {r.kind} folder"))
+    flagged = {f.line for f in r.findings if f.rule == "SL042"}
     for line, path in refmod.machine_paths(p.body, p.body_start):
+        if line in flagged:
+            continue
         add(Finding("SL042", r.path, line, f"machine-specific path '{path}...' will not exist for anyone else"))
 
 

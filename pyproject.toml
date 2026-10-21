@@ -1,0 +1,37 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "amagi-skill-lint"
+version = "0.1.0"
+description = "Lint Claude Code SKILL.md and subagent files: frontmatter, description triggers, token size, broken file references, and overlapping descriptions that make the wrong skill fire."
+readme = "README.md"
+license = { text = "MIT" }
+authors = [{ name = "AmagiLabs (Amagisolutionsgroup, Inc.)", email = "dev@amagisolutionsgroup.com" }]
+requires-python = ">=3.9"
+keywords = ["claude", "claude-code", "claude-skills", "subagents", "linter", "cli"]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
+  "Environment :: Console",
+  "Topic :: Software Development :: Quality Assurance",
+]
+dependencies = ["PyYAML>=5.4"]
+
+[project.optional-dependencies]
+dev = ["pytest>=7.0"]
+
+[project.scripts]
+amagi-skill-lint = "amagi_skill_lint.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/amagilabs/amagi-skill-lint"
+Organization = "https://github.com/amagilabs"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
